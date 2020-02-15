@@ -160,7 +160,8 @@ func makeExoStrFromCsv(objects []aviutlobj.AviUtlObject, durationObjs []aviutlob
       beforeObjEnd = newObj.Blocks[0].Params["end"]
       newObj.Blocks[0].Params["group"] = strconv.Itoa(j + 1)
 
-      t, _, err := transform.String(unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder(), records[j][i])
+      t, _, err := transform.String(unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder(),
+        strings.Replace(records[j][i], "\n", "\r\n", -1))
       if err != nil {
         return "", myError{"UTF-16LE encode error: " + err.Error()}
       }
