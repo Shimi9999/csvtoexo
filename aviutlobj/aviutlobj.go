@@ -1,7 +1,6 @@
 package aviutlobj
 
 import (
-  "fmt"
   "strings"
 )
 
@@ -68,7 +67,6 @@ func removeObject(objects []AviUtlObject, targetIndex int) []AviUtlObject {
       result = append(result, obj)
     }
   }
-  fmt.Printf("removed!: %d\n", targetIndex)
   return result
 }
 
