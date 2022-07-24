@@ -26,7 +26,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() != 2 {
-		fmt.Println("実行は csvtoexo [-duration exopath] <exopath> <csvpath> で行ってください。")
+		fmt.Println("Usage: csvtoexo [-duration <duration-exopath>] <template-exopath> <csvpath>")
 		os.Exit(1)
 	}
 
@@ -56,7 +56,7 @@ func main() {
 			os.Exit(1)
 		}
 		if len(durObjects) == 0 {
-			fmt.Println("Duration exo no objects.")
+			fmt.Println("Duration exo has no objects.")
 			os.Exit(1)
 		}
 
@@ -78,7 +78,7 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	fmt.Printf("Finish: output.exo made")
+	fmt.Printf("Finish: output.exo is generated.")
 }
 
 func loadExo(path string) ([]aviutlobj.AviUtlObject, error) {
@@ -174,7 +174,7 @@ func makeExoStrFromCsv(objects []aviutlobj.AviUtlObject, durationObjs []aviutlob
 		var beforeObjEnd string
 		for j := 0; j < len(records); j++ {
 			newObj := objects[i+1]
-			for index, _ := range newObj.Blocks {
+			for index := range newObj.Blocks {
 				if index == 0 {
 					newObj.Blocks[index].Name = strconv.Itoa(objCount)
 				} else {
@@ -233,6 +233,10 @@ func createExo(str string) error {
 	}
 	defer file.Close()
 
-	file.Write(([]byte)(str))
+	_, err = file.Write(([]byte)(str))
+	if err != nil {
+		return fmt.Errorf("Exo file create error: %s", err)
+	}
+
 	return nil
 }

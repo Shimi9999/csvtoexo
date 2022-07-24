@@ -2,5 +2,5 @@
 
 Usage:
 ```
-csvtoexo <exo path> <csv path>
+csvtoexo [-duration <duration-exopath>] <template-exopath> <csvpath>
 ```
