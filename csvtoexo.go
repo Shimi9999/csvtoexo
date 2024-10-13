@@ -26,25 +26,29 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() != 2 {
-		fmt.Println("Usage: csvtoexo [-duration <duration-exopath>] <template-exopath> <csvpath>")
+		fmt.Println("Usage: csvtoexo [-duration <duration exopath>] <template exopath> <csvpath>")
 		os.Exit(1)
 	}
 
-	objects, err := loadExo(flag.Arg(0))
+	templateExoPath := flag.Arg(0)
+	csvpath := flag.Arg(1)
+
+	objects, err := loadExo(templateExoPath)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("loadExo error:", err.Error())
 		os.Exit(1)
 	}
 
-	records, err := loadCsv(flag.Arg(1))
+	records, err := loadCsv(csvpath)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("loadCsv error:", err.Error())
 		os.Exit(1)
 	}
 
 	objects = aviutlobj.DistinctLayer(objects)
 	if len(objects)-1 < len(records[0]) {
-		fmt.Printf("元のExoに配置されているオブジェクトのレイヤーが足りません: layer=%d col=%d", len(objects)-1, len(records[0]))
+		fmt.Printf("テンプレートexoファイルに配置されているオブジェクト数がcsvデータのカラム数より少ないです: layer=%d, column=%d",
+			len(objects)-1, len(records[0]))
 		os.Exit(1)
 	}
 
@@ -52,7 +56,7 @@ func main() {
 	if *duration != "" {
 		durObjects, err := loadExo(*duration)
 		if err != nil {
-			fmt.Println("Duration exo error:", err.Error())
+			fmt.Println("Duration loadExo error:", err.Error())
 			os.Exit(1)
 		}
 		if len(durObjects) == 0 {
@@ -62,29 +66,29 @@ func main() {
 
 		str, err = makeExoStrFromCsv(objects, durObjects, records)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("makeExoStrFromCsv error:", err.Error())
 			os.Exit(1)
 		}
 	} else {
 		str, err = makeExoStrFromCsv(objects, nil, records)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("makeExoStrFromCsv error:", err.Error())
 			os.Exit(1)
 		}
 	}
 
 	err = createExo(str)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("createExo error:", err.Error())
 		os.Exit(1)
 	}
-	fmt.Printf("Finish: output.exo is generated.")
+	fmt.Printf("Finish: output.exo generated.")
 }
 
 func loadExo(path string) ([]aviutlobj.AviUtlObject, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("exoファイルのパスが間違っています: %s", err)
+		return nil, fmt.Errorf("exo Open: %v", err)
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
@@ -95,7 +99,7 @@ func loadExo(path string) ([]aviutlobj.AviUtlObject, error) {
 	for scanner.Scan() {
 		line, _, err := transform.String(japanese.ShiftJIS.NewDecoder(), scanner.Text())
 		if err != nil {
-			return nil, fmt.Errorf("ShiftJIS decode error: %s", err)
+			return nil, fmt.Errorf("ShiftJIS decode: %v", err)
 		}
 
 		r := regexp.MustCompile(`^\[.+\]$`)
@@ -133,7 +137,7 @@ func loadExo(path string) ([]aviutlobj.AviUtlObject, error) {
 	object.Blocks = append(object.Blocks, block)
 	aviutlObjects = append(aviutlObjects, object)
 	if scanner.Err() != nil {
-		return nil, fmt.Errorf("Exo scan error: %s", scanner.Err())
+		return nil, fmt.Errorf("exo Scan: %v", scanner.Err())
 	}
 
 	return aviutlObjects, nil
@@ -142,14 +146,14 @@ func loadExo(path string) ([]aviutlobj.AviUtlObject, error) {
 func loadCsv(path string) ([][]string, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("csvファイルのパスが間違っています: %s", err)
+		return nil, fmt.Errorf("csv Open: %v", err)
 	}
 	defer file.Close()
 
 	r := csv.NewReader(file)
 	records, err := r.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("CSV string read error: %s", err)
+		return nil, fmt.Errorf("csv ReadAll: %v", err)
 	}
 
 	isNoData := false
@@ -159,7 +163,7 @@ func loadCsv(path string) ([][]string, error) {
 		isNoData = true
 	}
 	if isNoData {
-		return nil, fmt.Errorf("CSV has no data.")
+		return nil, fmt.Errorf("csv has no data.")
 	}
 
 	return records, nil
@@ -203,7 +207,7 @@ func makeExoStrFromCsv(objects []aviutlobj.AviUtlObject, durationObjs []aviutlob
 			t, _, err := transform.String(unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder(),
 				strings.Replace(records[j][i], "\n", "\r\n", -1))
 			if err != nil {
-				return "", fmt.Errorf("UTF-16LE encode error: %s", err)
+				return "", fmt.Errorf("UTF-16LE encode: %v", err)
 			}
 			encoded := hex.EncodeToString([]byte(t))
 			length := utf8.RuneCountInString(encoded)
@@ -220,7 +224,7 @@ func makeExoStrFromCsv(objects []aviutlobj.AviUtlObject, durationObjs []aviutlob
 
 	shiftJisExoStr, _, err := transform.String(japanese.ShiftJIS.NewEncoder(), newExoStr)
 	if err != nil {
-		return "", fmt.Errorf("ShiftJIS encode error: %s", err)
+		return "", fmt.Errorf("ShiftJIS encode: %v", err)
 	}
 
 	return shiftJisExoStr, nil
@@ -229,13 +233,13 @@ func makeExoStrFromCsv(objects []aviutlobj.AviUtlObject, durationObjs []aviutlob
 func createExo(str string) error {
 	file, err := os.Create("./output.exo")
 	if err != nil {
-		return fmt.Errorf("Exo file create error: %s", err)
+		return fmt.Errorf("exo Create: %v", err)
 	}
 	defer file.Close()
 
 	_, err = file.Write(([]byte)(str))
 	if err != nil {
-		return fmt.Errorf("Exo file create error: %s", err)
+		return fmt.Errorf("exo White: %v", err)
 	}
 
 	return nil
