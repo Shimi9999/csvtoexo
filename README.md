@@ -12,7 +12,7 @@ csvtoexo [-duration <duration exopath>] <template exopath> <csvpath>
 ```
 - duration: データごとのオブジェクトの長さの元になるexoファイル
 
-## example
+## Example
 **元データ(data.csv)**
 ```
 No.1,Genre1,Title1,Artist1,Team1
@@ -58,6 +58,7 @@ Finish: output.exo generated.
 
 **出力オブジェクトファイル(output.exo)**
 
+`template.exo`のデザインで`data.csv`のデータが出力される  
 ![output.exo](images/output_exo.png)
 
 ![output.exo view](images/output_exo_view.png)
