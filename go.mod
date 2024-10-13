@@ -12,6 +12,6 @@ exclude (
 )
 
 require (
-	github.com/Shimi9999/csvtoexo/aviutlobj v0.0.0-00010101000000-000000000000
-	golang.org/x/text v0.7.0
+	github.com/Shimi9999/csvtoexo/aviutlobj v0.0.0-20230321062810-d6b54e36764c
+	golang.org/x/text v0.19.0
 )
